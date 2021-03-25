@@ -12,7 +12,7 @@ var addSlave = (id, job) => {
         if (err) return;
         setTimeout(() => {
             jobSlave(id, job);
-        }, 500);
+        }, 1000);
     });
 }
 
@@ -51,9 +51,9 @@ setInterval(() => {
                         addSlave(slave, job);
                         setTimeout(() => {
                             buyFetter(slave);
-                        }, 500);
+                        }, 1000);
                     });
-                }, 100 * id++);
+                }, 1000 * id++);
             });
             slaveDataLast = slaveIdsParsed;
         });
