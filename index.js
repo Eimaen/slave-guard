@@ -1,23 +1,25 @@
 const request = require('request');
 const { auth, job, userAgent } = require('./config.json');
 
+const origin = "https://prod-app7794757-c1ffb3285f12.pages-ac.vk-apps.com";
+
 var jobSlave = (id, job) => {
-    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/jobSlave', json: { 'slave_id': id, 'name': job }, headers: { 'User-Agent': userAgent, 'Authorization': auth } }, (err, httpResponse, body) => {
+    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/jobSlave', json: { 'slave_id': id, 'name': job }, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
         if (err) return;
     });
 }
 
 var addSlave = (id, job) => {
-    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/buySlave', json: { 'slave_id': id }, headers: { 'User-Agent': userAgent, 'Authorization': auth } }, (err, httpResponse, body) => {
+    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/buySlave', json: { 'slave_id': id }, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
         if (err) return;
         setTimeout(() => {
             jobSlave(id, job);
-        }, 1000);
+        }, 500);
     });
 }
 
 var buyFetter = (id) => {
-    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/buyFetter', json: { 'slave_id': id }, headers: { 'User-Agent': userAgent, 'Authorization': auth } }, (err, httpResponse, body) => {
+    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/buyFetter', json: { 'slave_id': id }, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
         if (err) return;
     });
 }
@@ -25,7 +27,7 @@ var buyFetter = (id) => {
 var slaveDataLast = [];
 setInterval(() => {
     try {
-        request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/start', headers: { 'User-Agent': userAgent, 'Authorization': auth } }, (err, httpResponse, body) => {
+        request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/start', headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
             if (err) return;
             if (body.startsWith('<html>')) return; // 5xx server error handling (unusual, damn stupid way)
             body = JSON.parse(body);
@@ -43,7 +45,7 @@ setInterval(() => {
             var id = 0;
             notSlaves.forEach(slave => {
                 setTimeout(() => {
-                    request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/user?id=' + slave, headers: { 'User-Agent': userAgent, 'Authorization': auth } }, (err, httpResponse, body) => {
+                    request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/user?id=' + slave, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
                         if (err) return;
                         if (body.startsWith('<html>')) return;
                         body = JSON.parse(body);
