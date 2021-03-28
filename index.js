@@ -110,7 +110,7 @@ if (slaveUpgrader.enabled) {
         try {
             if (slaveDataLast.length == 0)
                 return;
-            request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/slaveList?id=' + myId, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
+            request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/start', headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
                 if (err) return;
                 if (body.startsWith('<html>')) return;
                 body = JSON.parse(body);
