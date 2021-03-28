@@ -28,6 +28,12 @@ var buyFetter = (id) => {
     });
 }
 
+var saleSlave = (id) => {
+    request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/saleSlave', json: { 'slave_id': id }, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
+        if (err) return;
+    });
+}
+
 var moneyLeft = 0;
 
 if (slaveGuard.enabled) {
