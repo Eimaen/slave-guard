@@ -1,9 +1,9 @@
 {
     "auth": "",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0",
-    "myId": 248933384,
+    "myId": 0,
     "slaveGuard": {
-        "enabled": true,
+        "enabled": false,
         "jobs": [
             "焦燥キリキリ舞い 参って",
             "四六時 堂々巡ちゃって",
@@ -61,9 +61,11 @@
         ]
     },
     "slaveStealer": {
-        "enabled": true,
+        "enabled": false,
         "targets": [
-            420552825
+            1337,
+            911,
+            228
         ],
         "jobs": ["slave-guard"],
         "moneyLimit": 10000000
@@ -76,6 +78,15 @@
     "slaveFinder": {
         "enabled": false,
         "jobs": ["slave-guard"],
+        "filters": {
+            "searchAmount": 100,
+            "minPrice": 0,
+            "maxPrice": 100,
+            "minProfit": 0
+        },
         "moneyLimit": 10000000
+    },
+    "slaveNotifier": {
+        "enabled": true
     }
 }
