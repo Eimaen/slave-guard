@@ -1,18 +1,27 @@
 const request = require('request');
-const { auth, myId, slaveGuard, slaveStealer, slaveFinder, slaveUpgrader, slaveNotifier, userAgent } = require('./config.json');
+const { auth, myId, defaultJobs, userAgent } = require('./config.json');
+var { slaveGuard, slaveStealer, slaveFinder, slaveUpgrader, slaveNotifier, slaveJobGiver } = require('./config.json');
+
+if (slaveGuard.jobs.length == 0) slaveGuard.jobs = defaultJobs;
+if (slaveStealer.jobs.length == 0) slaveStealer.jobs = defaultJobs;
+if (slaveFinder.jobs.length == 0) slaveFinder.jobs = defaultJobs;
+if (slaveUpgrader.jobs.length == 0) slaveUpgrader.jobs = defaultJobs;
+if (slaveJobGiver.jobs.length == 0) slaveJobGiver.jobs = defaultJobs;
 
 Array.prototype.random = function () {
     return this[Math.floor((Math.random() * this.length))];
 }
 
 Array.prototype.remove = function (val) {
-    for (var i = 0; i < this.length; i++) 
+    for (var i = 0; i < this.length; i++)
         if (this[i] == val) {
             this.splice(i, 1);
             i--;
         }
     return this;
 }
+
+const getRandomInt = (min, max) => Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);
 
 const origin = "https://prod-app7794757-c1ffb3285f12.pages-ac.vk-apps.com";
 
@@ -27,7 +36,7 @@ var addSlave = (id, job) => {
         if (err) return;
         setTimeout(() => {
             jobSlave(id, job);
-        }, 500);
+        }, getRandomInt(500, 2000));
     });
 }
 
@@ -76,7 +85,7 @@ if (slaveGuard.enabled) {
                     return !slaveIdsParsed.includes(el);
                 });
 
-                var id = 0;
+                var id = 1;
                 notSlaves.forEach(slave => {
                     if (allowedEscapists.includes(slave))
                         console.log(`${slave} \x1b[32m(allowed) \x1b[36m[slaveGuard]\x1b[0m`);
@@ -87,11 +96,16 @@ if (slaveGuard.enabled) {
                                 if (body.startsWith('<html>')) return;
                                 body = JSON.parse(body);
 
-                                console.log(`${slave} -> ${body.master_id} \x1b[36m[slaveGuard]\x1b[0m`);
-                                addSlave(slave, slaveGuard.jobs.random());
-                                setTimeout(() => {
-                                    buyFetter(slave);
-                                }, 1000);
+                                if (body.master_id == myId)
+                                    console.log(`${slave} \x1b[32m(re-purchase) \x1b[36m[slaveGuard]\x1b[0m`);
+                                else {
+                                    console.log(`${slave} -> ${body.master_id} \x1b[36m[slaveGuard]\x1b[0m`);
+                                    addSlave(slave, slaveGuard.jobs.random());
+                                    if (slaveGuard.fetter)
+                                        setTimeout(() => {
+                                            buyFetter(slave);
+                                        }, getRandomInt(500, 2000));
+                                }
                             });
                         }, 1000 * id++);
                 });
@@ -124,7 +138,7 @@ if (slaveGuard.enabled) {
 }
 
 if (slaveStealer.enabled) {
-    var id = 0;
+    var id = 1;
     slaveStealer.targets.forEach(attackId => {
         setTimeout(() => {
             setInterval(() => {
@@ -135,6 +149,7 @@ if (slaveStealer.enabled) {
                         if (err) return;
                         if (body.startsWith('<html>')) return;
                         body = JSON.parse(body);
+
                         var slave = body.slaves.filter(e => e.fetter_to <= 0).random();
                         if (slave == null) return;
                         addSlave(slave.id, slaveStealer.jobs.random());
@@ -157,7 +172,7 @@ if (slaveUpgrader.enabled) {
                 if (body.startsWith('<html>')) return;
                 body = JSON.parse(body);
 
-                var slave = body.slaves.filter(e => e.fetter_to <= 0 && e.profit_per_min < 1000 && e.profit_per_min != 0 && e.job.name != '').random();
+                var slave = body.slaves.filter(e => e.profit_per_min < 1000 && e.profit_per_min != 0 && e.job.name != '').random();
                 if (slave == null) return;
                 allowedEscapists.push(slave.id);
                 saleSlave(slave.id);
@@ -174,34 +189,37 @@ if (slaveUpgrader.enabled) {
     }, 5000);
 }
 
-const getRandomInt = (min, max) => Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);
-
 var hasSearchEnded = true;
 if (slaveFinder.enabled) {
     setInterval(() => {
         if (moneyLeft < slaveFinder.moneyLimit || !hasSearchEnded)
             return;
+        hasSearchEnded = false;
+        // console.log(`started \x1b[35m[slaveFinder]\x1b[0m`);
         try {
             var ids = [];
             for (var i = 0; i < 100; i++)
                 ids.push(getRandomInt(100, 999999999));
             request.post({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/user', json: { 'ids': ids }, headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
                 if (err) return;
+                if (body.error != null) return;
+                if (body.users == null) return;
 
-                hasSearchEnded = false;
-                var id = 0
-                body.users.forEach(slave => {
-                    if (slave.price <= slaveFinder.filters.maxPrice &&
-                        slave.price >= slaveFinder.filters.minPrice &&
-                        slave.profit_per_min >= slaveFinder.filters.minProfit)
+                try {
+                    var id = 1;
+                    body.users.filter(e => e.price <= slaveFinder.filters.maxPrice && e.price >= slaveFinder.filters.minPrice && e.profit_per_min >= slaveFinder.filters.minProfit && e.fetter_to == 0).forEach(slave => {
                         setTimeout(() => {
                             addSlave(slave.id, slaveFinder.jobs.random());
                             console.log(`${myId} <- ${slave.id} \x1b[35m[slaveFinder]\x1b[0m`);
-                        }, 5000 * id++);
-                });
-                setTimeout(() => {
-                    hasSearchEnded = true;
-                }, 5000 * id);
+                        }, getRandomInt(4000, 6000) * id++);
+                    });
+                    setTimeout(() => {
+                        hasSearchEnded = true;
+                        // console.log(`finished \x1b[35m[slaveFinder]\x1b[0m`);
+                    }, 6000 * id);
+                }
+                catch { hasSearchEnded = true; }
+
             });
         }
         catch { }
@@ -214,4 +232,30 @@ if (slaveNotifier.enabled) {
     }, 10000);
 }
 
+var hasJobsGivingEnded = true;
+if (slaveJobGiver.enabled) {
+    setInterval(() => {
+        if (!hasJobsGivingEnded)
+            return;
+        hasJobsGivingEnded = false;
+        // console.log(`starting \x1b[32m[slaveJobGiver]\x1b[0m`);
+        request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/start', headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
+            if (err) return;
+            if (body.startsWith('<html>')) return;
+            body = JSON.parse(body);
+
+            var id = 1;
+            body.slaves.filter(e => e.job.name == '').forEach(slave => {
+                setTimeout(() => {
+                    jobSlave(slave.id, slaveJobGiver.jobs.random());
+                    console.log(`${slave.id} <+> \x1b[32m[slaveJobGiver]\x1b[0m`);
+                }, getRandomInt(2000, 4000) * id++);
+            });
+            setTimeout(() => {
+                hasJobsGivingEnded = true;
+                // console.log(`finished \x1b[32m[slaveJobGiver]\x1b[0m`);
+            }, 4000 * id);
+        });
+    }, 60000);
+}
 console.log('slave-guard is running...');
