@@ -1,6 +1,6 @@
 const request = require('request');
 const { auth, myId, defaultJobs, userAgent } = require('./config.json');
-var { slaveGuard, slaveStealer, slaveFinder, slaveUpgrader, slaveNotifier, slaveJobGiver } = require('./config.json');
+var { slaveGuard, slaveStealer, slaveFinder, slaveUpgrader, slaveNotifier, slaveJobGiver, slaveJobChanger } = require('./config.json');
 
 if (slaveGuard.jobs.length == 0) slaveGuard.jobs = defaultJobs;
 if (slaveStealer.jobs.length == 0) slaveStealer.jobs = defaultJobs;
@@ -254,6 +254,32 @@ if (slaveJobGiver.enabled) {
             setTimeout(() => {
                 hasJobsGivingEnded = true;
                 // console.log(`finished \x1b[32m[slaveJobGiver]\x1b[0m`);
+            }, 4000 * id);
+        });
+    }, 60000);
+}
+var hasJobsChangingEnded = true;
+if (slaveJobChanger.enabled) {
+    setInterval(() => {
+        if (!hasJobsChangingEnded)
+            return;
+        hasJobsChangingEnded = false;
+        // console.log(`starting \x1b[32m[slaveJobChanger]\x1b[0m`);
+        request.get({ url: 'https://pixel.w84.vkforms.ru/HappySanta/slaves/1.0.0/start', headers: { 'User-Agent': userAgent, 'Authorization': auth, 'Origin': origin } }, (err, httpResponse, body) => {
+            if (err) return;
+            if (body.startsWith('<html>')) return;
+            body = JSON.parse(body);
+
+            var id = 1;
+            body.slaves.filter(e => e.job.name == slaveJobChanger.job1).forEach(slave => {
+                setTimeout(() => {
+                    jobSlave(slave.id, slaveJobChanger.job2);
+                    console.log(`${slave.id} <+> \x1b[32m[slaveJobChanger]\x1b[0m`);
+                }, getRandomInt(2000, 4000) * id++);
+            });
+            setTimeout(() => {
+                hasJobsChangingEnded = true;
+                // console.log(`finished \x1b[32m[slaveJobChanger]\x1b[0m`);
             }, 4000 * id);
         });
     }, 60000);
