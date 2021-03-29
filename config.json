@@ -38,6 +38,11 @@
         "enabled": true,
         "jobs": []
     },
+    "slaveJobChanger": {
+        "enabled": true,
+        "job1": "slave-guard",
+		"job2": "РАб"
+    },
     "slaveNotifier": {
         "enabled": true
     }
